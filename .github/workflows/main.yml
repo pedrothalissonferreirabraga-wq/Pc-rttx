@@ -1,0 +1,54 @@
+name: Windows Cloud PC - Anydesk Melhorado
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Iniciando Sistema Reforçado
+    runs-on: windows-latest
+    timeout-minutes: 10080
+    env:
+      PROCESSOR_COUNT: 8
+      OPENGL: "1"
+      GITHUB_PRESERVE_WORKFLOW: true
+      MEMORY_GB: 16
+
+    steps:
+      - name: Baixar e Instalar Essenciais
+        run: |
+          Invoke-WebRequest -Uri "https://www.dropbox.com/scl/fi/7eiczvgil84czu55dxep3/Downloads.bat?rlkey=wzdc1wxjsph2b7r0atplmdz3p&dl=1" -OutFile "Downloads.bat" -UseBasicParsing
+          cmd /c Downloads.bat
+
+      - name: Baixar start.bat
+        run: |
+          Invoke-WebRequest -Uri "https://www.dropbox.com/scl/fi/cypox1i3e2ewmpnr19fqn/start.bat?rlkey=s6skd47gmo21vkl0yv3tyneri&dl=1" -OutFile "start.bat" -UseBasicParsing
+
+      - name: Monitoramento Inteligente
+        run: |
+          function Iniciar-AnyDesk {
+            cmd /c start.bat
+            Start-Sleep -Seconds 15
+          }
+          
+          Iniciar-AnyDesk
+          Write-Host "AnyDesk pronto! ID e senha no log acima."
+          
+          $ultimoRestart = Get-Date
+          while ($true) {
+            $anydesk = Get-Process AnyDesk -ErrorAction SilentlyContinue
+            if (-not $anydesk -or $anydesk.HasExited) {
+              $agora = Get-Date
+              $diff = ($agora - $ultimoRestart).TotalMinutes
+              if ($diff -gt 5) {  # Só reinicia se passaram 5 min
+                Write-Host "Caiu! Reiniciando..."
+                Iniciar-AnyDesk
+                $ultimoRestart = Get-Date
+              }
+            }
+            Start-Sleep -Seconds 30
+          }
+
+      - name: Limpeza Segura
+        if: always()
+        run: |
+          Remove-Item "Downloads.bat", "start.bat" -Force -ErrorAction SilentlyContinue
